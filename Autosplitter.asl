@@ -22,9 +22,9 @@ start
 	{
 		return true;
 	}
-	else if(current.height == 0)
+	else if(current.height == 0 ^ current.height == 1)
 	{
-	//if you are at 0 then you are at the loading screen, and hasBeenDown needs to be false, or the run is already over so it does nothing
+	//if you are at 0 or 1 then you are at the loading screen, and hasBeenDown needs to be false, or the run is already over so it does nothing
 		vars.hasBeenDown = false;
 
 	}
@@ -32,10 +32,10 @@ start
 
 split
 {
-//this is so that it will know to not end the timer when you haven't been below the build limit, thus stopping the issue of the timer stopping right away. The != 0 is so on the main menu so it doesn't register as you having been down
-	if(current.height <= 120 && vars.hasBeenDown == false && current.height != 0)
+//this is so that it will know to not end the timer when you haven't been below the build limit, thus stopping the issue of the timer stopping right away. The != 0 and !=1 is so on the main menu so it doesn't register as you having been down
+	if(current.height <= 128 && vars.hasBeenDown == false && current.height != 0 && current.height != 1)
 	{
-		print("somehow got to height 120, please send this message to the creator in discord " + current.height.ToString());
+		print("hasBeenDown changed height = " + current.height.ToString());
 		vars.hasBeenDown = true;
 	}
 	//will end timer when getting diamond if diamond% setting is checked, and makes sure to only split for diamonds once per run
@@ -44,9 +44,14 @@ split
 		vars.diamondsBeenSplit = true;
 		return true;
 	}
+	//there's a weird glitch where sometimes the height randomly jumps when spawning in, and it was stopping the timer thinking the character reached bedrock
+	//so it has to make sure you were a reasonable distance from bedrock before reaching it
+	//the old height != current height is because sometimes when it jumps, both old height and current height == 0
 //timer stops when at bedrock
-	if(current.height <= 2)
+	if(current.height <= 2 && old.height - current.height < 4 && old.height != current.height)
 		{
+			print("current height: " + current.height.ToString());
+			print("old height: " + old.height.ToString());
 			return true;
 		}
 //timer stops if at the build limit
