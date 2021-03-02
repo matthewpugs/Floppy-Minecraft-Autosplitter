@@ -2,6 +2,7 @@ state("not minecraft dont sue me pls")
 {
 	float height : "UnityPlayer.dll", 0x0131B0F8, 0x284, 0x8, 0x14, 0x64;
 	int diamonds : "mono-2.0-bdwgc.dll", 0x003A0C60, 0xA8, 0xE78, 0x48, 0x1C, 0x18, 0x70, 0x28;
+	int health : "mono-2.0-bdwgc.dll", 0x003A9FBC, 0x4A8, 0xF6C;
 }
 
 startup
@@ -56,6 +57,11 @@ split
 		}
 //timer stops if at the build limit
 	else if(current.height >= 129 && vars.hasBeenDown == true)
+		{
+			return true;
+		}
+//timer stops if dead
+	else if(current.health == 0)
 		{
 			return true;
 		}
