@@ -28,10 +28,17 @@ init
 	vars.diamondsBeenSplit = false;
 	vars.zombiesBeenKilled = false;
 	vars.treesBeenCut = false;
+	vars.fiftySevenBeenSplit = false;
 }
 
 start
 {
+	//won't actually reset the run, it's just to know when the timer's been ended so it can reset some variables
+	vars.diamondsBeenSplit = false;
+	vars.zombiesBeenKilled = false;
+	vars.treesBeenCut = false;
+	vars.fiftySevenBeenSplit = false;
+
 	//starts if at the build limit and you haven't been down below the build limit this run, erasing confusion with reaching build limit vs spawning there
 	if(current.height == 129 && vars.hasBeenDown == false)
 	{
@@ -60,8 +67,13 @@ split
 		{
 			return true;
 		}
-		else if(settings["57 Dirt"] && current.dirt == 57)
+		else if(settings["57 Dirt"] && current.dirt == 57 && vars.fiftySevenBeenSplit == false)
 		{
+			if(vars.fiftySevenBeenSplit == false)
+			{
+				print("false");
+			}
+			vars.fiftySevenBeenSplit = true;
 			return true;
 		}
 	}
@@ -125,11 +137,5 @@ split
 	}
 }
 
-//won't actually reset the run, it's just to know when the timer's been ended so it can reset some variables
-reset
-{
-	vars.diamondsBeenSplit = false;
-	vars.zombiesBeenKilled = false;
-	vars.treesBeenCut = false;
-}
+
 
