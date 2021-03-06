@@ -5,15 +5,20 @@ state("not minecraft dont sue me pls")
 	int zombiesKilled : "UnityPlayer.dll", 0x012B40B8, 0x128, 0x1C, 0x140;
 	int itemEntitiesOnGround : "UnityPlayer.dll", 0x0125AA40, 0x14, 0x38, 0x4E0;
 	int diamondEntitiesOnGround : "UnityPlayer.dll", 0x0131B0F8, 0xC, 0x150, 0x50, 0x34, 0x0, 0xC;
-
+	int dirt : "UnityPlayer.dll", 0x012934A0, 0x38C, 0x1C, 0x1C, 0x18, 0x70, 0x18;
 }
 
 startup
 {
-	settings.Add("diamond%", false, "will stop timer (or split) upon breaking diamond");
-	settings.Add("Kill 1 Zombie", false, "will split after killing 1 zombie");
-	settings.Add("Kill 10 Zombies", false, "will split after killing 10 zombies");
-	settings.Add("Cut Tree", false, "will split after a wood block/any other block is mined (that drops an item)");
+	settings.Add("Reach Bedrock", false, "Reach Bedrock%, stop timer at bedrock level");
+	settings.Add("Kill Zombie", false, "Kill Zombie%");
+		settings.Add("Kill 1 Zombie", false, "Kill 1 Zombie%, will split after killing 1 zombie", "Kill Zombie");
+		settings.Add("Kill 10 Zombies", false, "Kill 10 Zombies%, will split after killing 10 zombies", "Kill Zombie");
+	settings.Add("Break Diamond", false, "Break Diamond%, will stop timer upon breaking diamond");
+	settings.Add("Cut Tree", false, "Cut Tree%, will split after a wood block/any other block is mined (that drops an item)");
+	settings.Add("Build Limit", false, "Build Limit%, splits after reaching build limit");
+		settings.Add("57 Dirt", false, "splits after getting 57 dirt", "Build Limit");
+	settings.Add("Die", false, "Die%, splits after you die");
 
 }
 
@@ -42,54 +47,81 @@ start
 
 split
 {
-//this is so that it will know to not end the timer when you haven't been below the build limit, thus stopping the issue of the timer stopping right away. The != 0 and !=1 is so on the main menu so it doesn't register as you having been down
-	if(current.height <= 128 && vars.hasBeenDown == false && current.height != 0 && current.height != 1)
+	if(settings["Build Limit"])
 	{
-		print("hasBeenDown changed height = " + current.height.ToString());
-		vars.hasBeenDown = true;
-	}
-	//will end timer when getting diamond if diamond% setting is checked, and makes sure to only split for diamonds once per run
-	//diamondEntitiesOnGround starts at 1 for some reason
-	if(settings["diamond%"] && current.diamondEntitiesOnGround == 2 && vars.diamondsBeenSplit == false)
-	{
-		vars.diamondsBeenSplit = true;
-		return true;
-	}
-	//there's a weird glitch where sometimes the height randomly jumps when spawning in, and it was stopping the timer thinking the character reached bedrock
-	//so it has to make sure you were a reasonable distance from bedrock before reaching it
-	//the old height != current height is because sometimes when it jumps, both old height and current height == 0
-//timer stops when at bedrock
-	if(current.height <= 2 && old.height - current.height < 4 && old.height != current.height)
+		//this is so that it will know to not end the timer when you haven't been below the build limit, thus stopping the issue of the timer stopping right away. The != 0 and !=1 is so on the main menu so it doesn't register as you having been down
+		if(current.height <= 128 && vars.hasBeenDown == false && current.height != 0 && current.height != 1)
 		{
-			print("current height: " + current.height.ToString());
-			print("old height: " + old.height.ToString());
-			return true;
+			print("hasBeenDown changed height = " + current.height.ToString());
+			vars.hasBeenDown = true;
 		}
-//timer stops if at the build limit
-	else if(current.height >= 129 && vars.hasBeenDown == true)
+		//timer stops if at the build limit
+		else if(current.height >= 129 && vars.hasBeenDown == true)
 		{
 			return true;
 		}
-//timer stops if dead
-	else if(current.health == 0)
+		else if(settings["57 Dirt"] && current.dirt == 57)
 		{
 			return true;
 		}
-//vars.zombiesBeenKilled is needed because if it wasn't there it would split for all the splits as soon as you kill a zombie. it resets when the timer is reset
-	else if(current.zombiesKilled == 1 && vars.zombiesBeenKilled == false && settings["Kill 1 Zombie"])
-	{
-		vars.zombiesBeenKilled = true;
-		return true;
 	}
-	else if(current.zombiesKilled == 10 && settings["Kill 10 Zombies"])
+
+	else if(settings["Break Diamond"])
 	{
-		return true;
+		//will end timer when breaking diamond if break diamond setting is checked, and makes sure to only split for diamonds once per run
+		//diamondEntitiesOnGround starts at 1 for some reason
+		if(current.diamondEntitiesOnGround == 2 && vars.diamondsBeenSplit == false)
+		{
+			vars.diamondsBeenSplit = true;
+			return true;
+		}
 	}
-	//the item entities counter starts at 6 for some reason, 7 will be after cutting one wood
-	else if(current.itemEntitiesOnGround == 7 && settings["Cut Tree"] && vars.treesBeenCut == false)
+
+	else if(settings["Reach Bedrock"])
 	{
-		vars.treesBeenCut = true;
-		return true;
+		//there's a weird glitch where sometimes the height randomly jumps when spawning in, and it was stopping the timer thinking the character reached bedrock
+		//so it has to make sure you were a reasonable distance from bedrock before reaching it
+		//the old height != current height is because sometimes when it jumps, both old height and current height == 0
+		//timer stops when at bedrock
+		if(current.height <= 2 && old.height - current.height < 4 && old.height != current.height)
+			{
+				print("current height: " + current.height.ToString());
+				print("old height: " + old.height.ToString());
+				return true;
+			}
+	}
+
+	else if(settings["Die"])
+	{
+		//timer stops if dead
+		if(current.health == 0)
+		{
+			return true;
+		}
+	}
+
+	else if(settings["Kill Zombie"])
+	{
+		//vars.zombiesBeenKilled is needed because if it wasn't there it would split for all the splits as soon as you kill a zombie. it resets when the timer is reset
+		if(current.zombiesKilled == 1 && vars.zombiesBeenKilled == false && settings["Kill 1 Zombie"])
+		{
+			vars.zombiesBeenKilled = true;
+			return true;
+		}
+		else if(current.zombiesKilled == 10 && settings["Kill 10 Zombies"])
+		{
+			return true;
+		}
+	}
+
+	else if(settings["Cut Tree"])
+	{
+		//the item entities counter starts at 6 for some reason, 7 will be after cutting one wood
+		if(current.itemEntitiesOnGround == 7 && vars.treesBeenCut == false)
+		{
+			vars.treesBeenCut = true;
+			return true;
+		}
 	}
 }
 
